@@ -110,7 +110,7 @@ public class BoardRecorder
         };
 
         int number_of_data_points = sampling_rate;
-        double[,] doubleData = board_shim.get_current_board_data(number_of_data_points);
+        double[,] doubleData = board_shim.get_board_data(number_of_data_points);
 
         float[] data = new float[
             doubleData.GetLength(0) * doubleData.GetLength(1)
@@ -146,7 +146,7 @@ public class BoardRecorder
 
 
 [RequireComponent(typeof(Camera))]
-public class EmotionsSDK : MonoBehaviour 
+public class NewTestScript : MonoBehaviour 
 {
     private Thread mqttThread;
 

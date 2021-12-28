@@ -67,10 +67,10 @@ fig = vis.show_channels(timeseries, time)
 if show_events:
     vis.show_events(fig, events_df)
 
-if show_fragments:
-    vis.show_events(fig, fragments_df)
+# if show_fragments:
+#     vis.show_events(fig, fragments_df)
 
-vis.show_slider(fig)
+# vis.show_slider(fig)
 st.plotly_chart(fig, use_container_width=True)
 
 video_file = open('mock-session.mp4', 'rb')

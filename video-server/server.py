@@ -20,9 +20,9 @@ def on_message(client, userdata, message):
 
 
 def on_frame_message(client_id, message_json):
-    print(f"Receiving FRAME message from {client_id}")
     message_time = int(message_json['time'] * 1000)
     message_path = f'./data/{client_id}/frame-{message_time}.json'
+    print(f"Receiving FRAME message from {client_id}, {message_time}")
 
     json.dump(message_json, open(message_path, 'w'))
 
@@ -60,8 +60,8 @@ def on_event_message(client_id, message_json):
 client = mqtt.Client('server-client')
 client.connect('localhost')
 
-client.subscribe("/signal/frames")
-client.subscribe("/signal/events")
+client.subscribe("/signal/frames", qos=2)
+client.subscribe("/signal/events", qos=2)
 
 client.on_message = on_message
 client.loop_forever()

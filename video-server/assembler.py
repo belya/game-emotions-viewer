@@ -45,7 +45,7 @@ if __name__ == '__main__':
         frame_time = message_json['time']
 
         signal_window_size = int(message_json["period"] * sampling_rate)
-        board_data = np.array(message_json['boardData']).reshape(channels, -1)[:, -2 * signal_window_size:]
+        board_data = np.array(message_json['boardData']).reshape(channels, -1)
         signal_order[frame_time] = board_data
 
         image_data = np.array(
@@ -84,17 +84,8 @@ if __name__ == '__main__':
 
     # Signal restoring
 
-    previous_time = 0
-    previous_samples = 0
-    board_data_sorted = []
-
     for time, board_data in sorted(signal_order.items()):
-        expected_samples = int(time * sampling_rate)
-        window_size = expected_samples - previous_samples
-
-        board_data_sorted.append(board_data[:, -window_size:])
-        previous_samples += window_size
-        previous_time = time
+        board_data_sorted.append(board_data)
 
     board_data_concat = np.hstack(board_data_sorted)
 
@@ -123,6 +114,3 @@ if __name__ == '__main__':
         ORDER BY game_time
     """, conn)
     events_df.to_csv(f'{client_id}-events.csv')
-
-    # import pdb
-    # pdb.set_trace()

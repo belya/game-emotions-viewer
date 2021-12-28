@@ -26,8 +26,8 @@ def show_events(fig, events_df):
             opacity=0.2,
             layer="below", 
             line_width=0,
-            annotation_text=event['type'], 
-            annotation_position="top left",
+            # annotation_text=event['type'], 
+            # annotation_position="top left",
         )
     # fig.add_vline(x=131, line_width=3)
 
