@@ -12,10 +12,15 @@ def show_channels(timeseries, time):
 
     for i, series in enumerate(timeseries):
         fig.add_trace(
-            go.Scatter(x=time, y=series),
+            go.Scatter(x=time, y=series, name="test"),
             row=i + 1, col=1
         )
-        
+    fig.update_layout(legend=dict(
+        yanchor="top",
+        y=0.99,
+        xanchor="left",
+        x=0.01
+    ))
     return fig
 
 def show_events(fig, events_df):

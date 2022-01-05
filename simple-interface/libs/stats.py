@@ -3,6 +3,13 @@ import numpy as np
 
 
 def calculate_simple_statistics(timeseries, fragments_df):
+    if fragments_df.shape[0] == 0:
+        return {
+            'count': 0,
+            'length': 0,
+            'scores': []
+        }
+        
     fragments_length = fragments_df['end'] - fragments_df['start']
     fragments_count = fragments_df.shape[0]
     

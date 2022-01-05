@@ -1,0 +1,9 @@
+{
+    "OpenBCI8": {
+        "device_name": "OpenBCI Cyton, 8 channels, 250 Hz",
+        "channels": [
+            "Fp1", "Fp2", "C3", "C4", "P3", "P4", "O1", "O2"
+        ],
+        "sampling_rate": 250
+    }
+}
