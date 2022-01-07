@@ -1,3 +1,8 @@
+import {
+  Streamlit,
+  StreamlitComponentBase,
+  withStreamlitConnection,
+} from "streamlit-component-lib"
 import React, { Component } from 'react';
 import Plot from 'react-plotly.js';
 import { Timeline } from 'react-svg-timeline'
@@ -21,14 +26,15 @@ function getVerticalLine(currentTime, axis) {
   var line = {
     type: 'line',
     x: [currentTime, currentTime],
-    y: [50, 0],
+    y: [7, 5],
     xaxis: 'x',
     name: 'Position',
     mode: 'lines',
     line: {
       color: 'black',
       width: 3
-    }
+    },
+    showlegend: false
   }
   if (axis > 0) 
     line['yaxis'] = yaxis;
@@ -36,13 +42,18 @@ function getVerticalLine(currentTime, axis) {
 };
 
 
-class App extends Component {
+class App extends StreamlitComponentBase {
   constructor(props) {
     super(props);
 
+    var videoPath = this.props.args.video;
+    var signalReceived = this.props.args.signal;
+    var events = this.props.args.events;
+
     this.state = {
+      video: videoPath,
       currentTime: 0,
-      signal: this.getSignal(),
+      signal: signalReceived,
       events: [{
         eventId: 'start',
         tooltip: 'Start',
@@ -52,16 +63,16 @@ class App extends Component {
       traces: [],
       lanes: [
         {
+          laneId: videoLaneId,
+          label: 'Video Time',
+        },
+        {
           laneId: eventsLaneId,
           label: 'Game Events',
         },
         {
           laneId: fragmentsLaneId,
           label: 'Selected Fragments',
-        },
-        {
-          laneId: videoLaneId,
-          label: 'Video Time',
         }
       ]
     } 
@@ -91,21 +102,7 @@ class App extends Component {
   }
 
   getEvents() {
-    var events = [
-      {
-        eventId: 'event-2',
-        laneId: eventsLaneId,
-        tooltip: 'Test',
-        startTimeMillis: 12
-      },
-      {
-        eventId: 'fragment-1',
-        laneId: fragmentsLaneId,
-        tooltip: 'Test',
-        startTimeMillis: 12,
-        endTimeMillis: 24
-      }
-    ]
+    var events = this.props.args.events.map(e => Object.assign({}, e))
     return events
   }
 
@@ -139,10 +136,10 @@ class App extends Component {
     var fullEvents = startEndEvents.concat(baseEvents)
     fullEvents = fullEvents.concat([timelineEvent])
 
-    fullEvents.forEach((e) => {
-      e.startTimeMillis = e.startTimeMillis * 1000 + startSignalTime
+    fullEvents.map((e) => {
+      e.startTimeMillis = Math.round(e.startTimeMillis * 1000 + startSignalTime)
       if (e.endTimeMillis !== undefined)  
-        e.endTimeMillis = e.endTimeMillis * 1000 + startSignalTime
+        e.endTimeMillis = Math.round(e.endTimeMillis * 1000 + startSignalTime)
     })
 
     return fullEvents;
@@ -207,6 +204,7 @@ class App extends Component {
   render() {
     var self = this;
     var durationTimeline = this.state.signal.duration;
+    var videoPath = this.state.video;
 
     function dateFormat(ms) {
       var formatString = new Date(ms).toLocaleTimeString('en-US', { 
@@ -229,8 +227,8 @@ class App extends Component {
       <div className="App" style={{width: componentWidth}}>
         <div className="row">
           <div className="col-md-4 player">
-            <video width="{componentWidth}" height="240" controls onTimeUpdate={onVideoTimeChange}>
-              <source src="./mock-session.mp4" type="video/mp4"/>
+            <video height="240" controls onTimeUpdate={onVideoTimeChange}>
+              <source src={videoPath} type="video/mp4"/>
               Your browser does not support the video tag.
             </video> 
           </div>
@@ -257,7 +255,11 @@ class App extends Component {
                   t: 5,
                   pad: 4
                 },
-                showlegend: false
+                legend: {
+                  y: 1.15,
+                  orientation: "h",
+                  bgcolor: 'rgba(255,255,255,0)'
+                }
               }}
             />
           </div>
@@ -272,6 +274,11 @@ class App extends Component {
               events={this.state.events} 
               lanes={this.state.lanes} 
               dateFormat={dateFormat} 
+              zoomLevels={[
+                '1 min',
+                '10 secs',
+                '1 sec'
+              ]}
             />
           </div>
         </div>
@@ -279,4 +286,4 @@ class App extends Component {
     );
   }
 }
-export default App;
+export default withStreamlitConnection(App);

@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 
 import pandas as pd
 import numpy as np
@@ -9,10 +10,25 @@ from libs import eventql
 
 # -- Set page config
 
+def process_events(events_df, lane_id, ends=False):
+    events_df['startTimeMillis'] = events_df['start']
+    if ends:
+        events_df['endTimeMillis'] = events_df['end']
+    events_df['eventId'] = lane_id + events_df.index.astype(str)
+    events_df['laneId'] = lane_id 
+    events_df['tooltip'] = events_df['type']
+
+    return events_df
+
 st.set_page_config(
     page_title='Game Emotions Viewer', 
     page_icon=":eyeglasses:",
     layout='wide'
+)
+
+game_viewer_component = components.declare_component(
+    "game_viewer",
+    url="http://localhost:3000"
 )
 
 timeseries_df = pd.read_csv('mock-session-indicators.csv')
@@ -22,19 +38,24 @@ time = timeseries_df.index.values
 
 channel_names = dict(enumerate(timeseries_df.columns))
 
-events_df = pd.read_csv('mock-session-events.csv')
+
+events_df = pd.read_csv('mock-session-events.csv').drop(columns="Unnamed: 0")
+
 events_df['start'] = events_df['start_sec']
-events_df['end'] = events_df['end_sec'] 
+events_df['end'] = events_df['end_sec']
+
+events_df = process_events(events_df, 'events-lane')
 
 st.sidebar.markdown("""
  ## Legend of Zelda: Breath of the Wild
  * Record time: 20.05.2022, 11:00
  * Duration: 7 min 31 sec
- * Device: OpenBCI Cyton, 8 channels, 250 Hz
+ * Device: OpenBCI Cyton
+   * 8 channels, 250 Hz
  * Patient: NOOMKCALB
 """)
 
-eventql_query = st.sidebar.text_input('EventQL query:', 'down -> [up] -> down')
+eventql_query = st.sidebar.text_input('EventQL query:', '[up]')
 show_events = st.sidebar.checkbox('Show events', True)
 show_fragments = st.sidebar.checkbox('Show selected fragments', True)
 
@@ -49,6 +70,11 @@ abtest_stats = stats.calculate_simple_statistics(
     fragments_df
 )
 
+fragments_df = process_events(fragments_df, 'fragments-lane', ends=True)
+
+events_json = events_df.to_dict(orient='records') +\
+    fragments_df.to_dict(orient='records')
+
 stat_text = [
     "## General Event Information",
     f"* Repeats: {abtest_stats['count']}",
@@ -58,22 +84,17 @@ stat_text = [
 for i, score in enumerate(abtest_stats['scores']):
     stat_text.append(f'* {channel_names[i]} p-value: {score * 100}%')
 
+game_viewer_component(
+    video='./mock-session.mp4',
+    signal={
+        'time': time.tolist(),
+        'duration': time.max(),
+        'boredom': timeseries_df['flow'].tolist(),
+        'flow': timeseries_df['flow'].tolist(),
+        'anxiety': timeseries_df['flow'].tolist()
+    },
+    events=events_json
+)
+
+
 st.sidebar.markdown("\n".join(stat_text))
-
-fig = vis.show_channels(timeseries, time)
-
-if show_events:
-    vis.show_events(fig, events_df)
-
-if show_fragments:
-    vis.show_events(fig, fragments_df)
-
-# vis.show_slider(fig)
-
-st.plotly_chart(fig, use_container_width=True)
-
-video_file = open('mock-session.mp4', 'rb')
-video_bytes = video_file.read()
-
-st.video(video_bytes)
-

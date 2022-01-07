@@ -14,9 +14,10 @@
     "react-chronos": "^1.0.5",
     "react-dom": "^17.0.2",
     "react-plotly.js": "^2.5.1",
-    "react-scripts": "5.0.0",
+    "react-scripts": "^3.4.1",
     "react-svg-timeline": "^0.18.0",
     "react-timeless": "^0.3.1",
+    "streamlit-component-lib": "^1.4.0",
     "web-vitals": "^2.1.2"
   },
   "scripts": {

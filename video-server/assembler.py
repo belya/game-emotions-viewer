@@ -5,12 +5,17 @@ import os
 import pandas as pd
 import sqlite3
 import cv2
+from tqdm import tqdm
+
+# from libs import eeg
 
 # TODO calculate frame rate
 # TODO restore proper image
 # TODO sort frame order
 
 if __name__ == '__main__':
+    devices = json.load(open('devices.json'))
+
     client_id = sys.argv[1]
     dir_path = f"./data/{client_id}/"
 
@@ -20,14 +25,14 @@ if __name__ == '__main__':
     signal_order = {}
 
     channels = None
+    channels_shape = None
     screen_width = None
     screen_height = None
     video_fps = None
     sampling_rate = None
 
-    for file in os.listdir(dir_path):
+    for file in tqdm(list(os.listdir(dir_path))):
         if ".json" not in file:
-            print(f"Skipping {file}")
             continue
 
         path = os.path.join(dir_path, file)
@@ -36,21 +41,22 @@ if __name__ == '__main__':
         except:
             print(f"{file} is unreadable")
 
-        channels = message_json['channels']
         screen_width = message_json['screenWidth']
         screen_height = message_json['screenHeight']
         video_fps = round(1 / message_json["period"])
-        sampling_rate = message_json['samplingRate']
+
+        device = message_json['device']
+        sampling_rate = devices[device]['sampling_rate']
+        channels = devices[device]['channels']
+        channels_shape = message_json['channelsShape']
 
         frame_time = message_json['time']
 
         signal_window_size = int(message_json["period"] * sampling_rate)
-        board_data = np.array(message_json['boardData']).reshape(channels, -1)
+        board_data = np.array(message_json['boardData'])
         signal_order[frame_time] = board_data
 
-        image_data = np.array(
-            message_json['videoFrame']
-        ).reshape(screen_height, screen_width, 3).astype(np.uint8)[:, :, ::-1]
+        image_data = cv2.imread(message_json['videoFrame'])
         frame_order[frame_time] = image_data
 
     # Video restoring
@@ -84,22 +90,26 @@ if __name__ == '__main__':
 
     # Signal restoring
 
+    board_data_sorted = []
+
     for time, board_data in sorted(signal_order.items()):
+        board_data = board_data.reshape(channels_shape, -1)
         board_data_sorted.append(board_data)
 
     board_data_concat = np.hstack(board_data_sorted)
 
     print("Board data duration:", board_data_concat.shape[-1] / sampling_rate)
-    # TODO add info
-    board_data_df = pd.DataFrame(board_data_concat.T)
+    # TODO set +1 only for OpenBCI
+    board_data_df = pd.DataFrame(board_data_concat.T[:, 1:len(channels) + 1], columns=channels)
     board_data_df['time'] = board_data_df.index / sampling_rate
-    board_data_df.to_csv(f'{client_id}.csv')
 
-    # import matplotlib.pyplot as plt
-    # plt.plot(board_data_concat[0, :])
-    # plt.show()
+    board_data_df.set_index('time').to_csv(f'{client_id}.csv')
 
-    # Statistics calculation
+    # indicators_df = indicators.get_indicators(
+    #     board_data_df, 
+    #     sampling_rate,
+    #     client_id
+    # )
 
     # Events restoring
 
