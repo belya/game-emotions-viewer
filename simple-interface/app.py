@@ -49,9 +49,9 @@ events_df['end'] = events_df['end_sec']
 events_df = process_events(events_df, 'events-lane')
 
 st.sidebar.markdown("""
- ## Legend of Zelda: Breath of the Wild
- * Record time: 20.05.2022, 11:00
- * Duration: 7 min 31 sec
+ ## Match-3, by Winterbolt Games
+ * Record time: 07.01.2022, 20:45
+ * Duration: 1 min 28 sec
  * Device: OpenBCI Cyton
    * 8 channels, 250 Hz
  * Patient: NOOMKCALB
@@ -80,11 +80,11 @@ events_json = events_df.to_dict(orient='records') +\
 stat_text = [
     "## General Event Information",
     f"* Repeats: {abtest_stats['count']}",
-    f"* Avg. duration: {round(abtest_stats['length'] / 100, 2)} sec.",
+    f"* Avg. duration: {abtest_stats['length'] / 100:.2f} sec.",
 ]
 
 for i, score in enumerate(abtest_stats['scores']):
-    stat_text.append(f'* {channel_names[i]} p-value: {score * 100}%')
+    stat_text.append(f'* {channel_names[i].capitalize()} p-value: {score * 100:.2f}%')
 
 os.system('cp ./mock-session.mp4 ./frontend/public/')
 
@@ -93,9 +93,9 @@ game_viewer_component(
     signal={
         'time': time.tolist(),
         'duration': time.max(),
-        'boredom': timeseries_df['flow'].tolist(),
+        'boredom': timeseries_df['boredom'].tolist(),
         'flow': timeseries_df['flow'].tolist(),
-        'anxiety': timeseries_df['flow'].tolist()
+        'anxiety': timeseries_df['anxiety'].tolist()
     },
     events=events_json
 )

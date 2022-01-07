@@ -26,7 +26,7 @@ function getVerticalLine(currentTime, axis) {
   var line = {
     type: 'line',
     x: [currentTime, currentTime],
-    y: [7, 5],
+    y: [1, -1],
     xaxis: 'x',
     name: 'Position',
     mode: 'lines',
