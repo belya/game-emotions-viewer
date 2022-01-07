@@ -1,6 +1,6 @@
-## Gameplay Indicators
+## Gameplay Indicators (in progress)
 
-User testing for game sessions with EEG-based indicators
+User testing for game sessions with EEG-based indicators 
 
 ![](./interface.png)
 
