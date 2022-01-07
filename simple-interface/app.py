@@ -8,6 +8,8 @@ from libs import vis
 from libs import stats 
 from libs import eventql
 
+import os
+
 # -- Set page config
 
 def process_events(events_df, lane_id, ends=False):
@@ -55,7 +57,7 @@ st.sidebar.markdown("""
  * Patient: NOOMKCALB
 """)
 
-eventql_query = st.sidebar.text_input('EventQL query:', '[up]')
+eventql_query = st.sidebar.text_input('EventQL query:', '[match]')
 show_events = st.sidebar.checkbox('Show events', True)
 show_fragments = st.sidebar.checkbox('Show selected fragments', True)
 
@@ -84,6 +86,8 @@ stat_text = [
 for i, score in enumerate(abtest_stats['scores']):
     stat_text.append(f'* {channel_names[i]} p-value: {score * 100}%')
 
+os.system('cp ./mock-session.mp4 ./frontend/public/')
+
 game_viewer_component(
     video='./mock-session.mp4',
     signal={
@@ -95,6 +99,5 @@ game_viewer_component(
     },
     events=events_json
 )
-
 
 st.sidebar.markdown("\n".join(stat_text))
