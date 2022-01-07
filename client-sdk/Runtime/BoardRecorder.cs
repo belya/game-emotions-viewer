@@ -25,7 +25,7 @@ class BoardRecorder
             int board_id = (int)BoardIds.SYNTHETIC_BOARD;
             board_shim = new BoardShim(board_id, input_params);
             board_shim.prepare_session();
-            board_shim.start_stream(450000, "file://brainflow_data.csv:w");
+            board_shim.start_stream(450000, "file://actual_brainflow_data.csv:w");
             sampling_rate = BoardShim.get_sampling_rate(board_id);
             Debug.Log("Brainflow streaming was started");
         }

@@ -57,9 +57,9 @@ st.sidebar.markdown("""
  * Patient: NOOMKCALB
 """)
 
-eventql_query = st.sidebar.text_input('EventQL query:', '[match]')
-show_events = st.sidebar.checkbox('Show events', True)
-show_fragments = st.sidebar.checkbox('Show selected fragments', True)
+eventql_query = st.sidebar.text_input('EventQL query:', '[match3x]')
+# show_events = st.sidebar.checkbox('Show events', True)
+# show_fragments = st.sidebar.checkbox('Show selected fragments', True)
 
 unique_events = events_df['type'].unique()
 events_dict = eventql.create_events_dictionary(unique_events)

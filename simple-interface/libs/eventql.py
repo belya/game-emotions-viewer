@@ -11,7 +11,8 @@ def create_events_dictionary(events):
             if letter not in events_dict.values():
                 events_dict[event] = letter
                 break
-                
+        
+        if event not in events_dict:        
             assert False, "No such letter"
     
     return events_dict
