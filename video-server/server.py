@@ -40,6 +40,7 @@ def on_frame_message(client_id, message_json):
         video_frame_bytes, 
         np.uint8
     ).reshape(screen_height, screen_width, 3).astype(np.uint8)[:, :, ::-1]
+    video_frame = np.flipud(video_frame)
 
     cv2.imwrite(image_path, video_frame)
     message_json['videoFrame'] = image_path
