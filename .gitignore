@@ -30,6 +30,9 @@ yarn-error.log*
 # Video server
 /video-server/data
 
+# Unity Lib
+brainflow_svm.model
+brainflow_svm.model.meta
+
 # Unused libs
-/client-sdk
 /component-template
