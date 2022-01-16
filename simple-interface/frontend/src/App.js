@@ -41,6 +41,19 @@ function getVerticalLine(currentTime, axis) {
   return line
 };
 
+function closestIndex(num, arr) {
+   var curr = arr[0], diff = Math.abs(num - curr);
+   var index = 0;
+   for (var val = 0; val < arr.length; val++) {
+      var newdiff = Math.abs(num - arr[val]);
+      if (newdiff < diff) {
+         diff = newdiff;
+         curr = arr[val];
+         index = val;
+      };
+   };
+   return index;
+};
 
 class App extends StreamlitComponentBase {
   constructor(props) {
@@ -60,6 +73,7 @@ class App extends StreamlitComponentBase {
         laneId: eventsLaneId,
         startTimeMillis: startSignalTime,
       }],
+      realtime:[],
       traces: [],
       lanes: [
         {
@@ -190,14 +204,32 @@ class App extends StreamlitComponentBase {
     return traces;
   }
 
+  getUpdatedRealtimeIndicators(currentTime) {
+    var time = this.state.signal.time;
+    var closestTimeIndex = closestIndex(currentTime, time);
+
+    var flowSignal = this.state.signal.flow[closestTimeIndex];
+    var boredomSignal = this.state.signal.boredom[closestTimeIndex];
+    var anxietySignal = this.state.signal.anxiety[closestTimeIndex];
+
+    return [{
+      type: 'bar',
+      x: [flowSignal, boredomSignal, anxietySignal],
+      y: ['Flow', 'Boredom', 'Anxiety'],
+      orientation: 'h'
+    }]
+  }
+
   updateCurrentTime(currentTime) {
     var updatedEvents = this.getUpdatedEvents(currentTime);
     var updatedTraces = this.getUpdatedTraces(currentTime);
+    var updatedRealtimeIndicators = this.getUpdatedRealtimeIndicators(currentTime);
 
     this.setState({
       currentTime: currentTime,
       traces: updatedTraces,
-      events: updatedEvents
+      events: updatedEvents,
+      realtime: updatedRealtimeIndicators
     });
   }
 
@@ -226,13 +258,31 @@ class App extends StreamlitComponentBase {
     return (
       <div className="App" style={{width: componentWidth}}>
         <div className="row">
-          <div className="col-md-4 player">
+          <div className="col-md-7 player">
             <video style={{width: '100%'}} height="240" controls onTimeUpdate={onVideoTimeChange}>
               <source src={videoPath} type="video/mp4"/>
               Your browser does not support the video tag.
             </video> 
           </div>
-          <div className="col-md-8 indicators">
+          <div className="col-md-5 realtime-indicators">
+            <Plot
+                data={this.state.realtime}
+                layout={{
+                  width: componentWidth * 1/3,
+                  height: 230,
+                  margin: {
+                    l: 60,
+                    r: 5,
+                    b: 5,
+                    t: 5,
+                    pad: 4
+                  }
+                }}
+              />
+          </div>
+        </div>
+        <div className="row">
+          <div className="col-md-12 indicators">
             <Plot
               data={this.state.traces}
               layout={{
@@ -246,13 +296,13 @@ class App extends StreamlitComponentBase {
                     range: [0, durationTimeline]
                   },
                 },
-                width: componentWidth * 2/3,
-                height: 250,
+                width: componentWidth,
+                height: 400,
                 margin: {
-                  l: 20,
-                  r: 5,
-                  b: 5,
-                  t: 5,
+                  l: 50,
+                  r: 50,
+                  b: 50,
+                  t: 50,
                   pad: 4
                 },
                 legend: {
@@ -286,4 +336,6 @@ class App extends StreamlitComponentBase {
     );
   }
 }
+
+// export default App;
 export default withStreamlitConnection(App);
