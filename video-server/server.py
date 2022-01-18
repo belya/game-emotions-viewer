@@ -15,7 +15,7 @@ def on_message(client, userdata, message):
     message_json = json.loads(
         str(message.payload.decode("utf-8"))
     )
-    client_id = "mock-session"
+    client_id = "mock-session" # Fix the error!
 
     if 'frames' in message.topic:
         on_frame_message(client_id, message_json)
@@ -85,4 +85,5 @@ client.subscribe("/signal/frames", qos=2)
 client.subscribe("/signal/events", qos=2)
 
 client.on_message = on_message
+print('Server is ready')
 client.loop_forever()

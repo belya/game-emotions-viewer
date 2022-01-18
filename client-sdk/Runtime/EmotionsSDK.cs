@@ -55,7 +55,7 @@ public class EmotionsSDK : MonoBehaviour
         var screenHeight = GetComponent<Camera>().pixelHeight;
 
         frameQueue = new Queue<SignalFrame>();
-        boardRecorder = new BoardRecorder();
+        boardRecorder = new BoardRecorder(minPeriod);
         screenRecorder = new ScreenRecorder(screenWidth, screenHeight);
 
         mqttClient = new MqttClient("localhost"); 

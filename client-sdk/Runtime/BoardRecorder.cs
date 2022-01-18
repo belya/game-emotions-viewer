@@ -8,25 +8,50 @@ namespace Emotions
 class BoardRecorder
 {
     private BoardShim board_shim = null;
+
+    public float period;
     public int sampling_rate = 0;
     public string device = "OpenBCI8";
 
     public int channels = 0;
 
+    private BoardShim InitializePlaybackBaord() {
+        BrainFlowInputParams input_params = new BrainFlowInputParams();
+        input_params.file = "/tmp/brainflow_data_test.csv";
+        input_params.other_info = ((int)BoardIds.GANGLION_BOARD).ToString();
+        Debug.Log(input_params);
+
+        int board_id = (int)BoardIds.PLAYBACK_FILE_BOARD;
+        board_shim = new BoardShim(board_id, input_params);
+
+        return board_shim;
+    }
+
+    private BoardShim InitializeCytonBoard() {
+        BrainFlowInputParams input_params = new BrainFlowInputParams();
+        input_params.serial_port = "/dev/ttyUSB0";
+
+        int board_id = (int)BoardIds.CYTON_BOARD;
+        board_shim = new BoardShim(board_id, input_params);
+
+        return board_shim;
+    }
+
     // Start is called before the first frame update
-    public BoardRecorder()
+    public BoardRecorder(float period)
     {
+        this.period = period;
         try
         {
-            BoardShim.set_log_file("brainflow_log.txt");
+            BoardShim.set_log_file("/tmp/brainflow_log.txt");
             BoardShim.enable_dev_board_logger();
 
-            BrainFlowInputParams input_params = new BrainFlowInputParams();
-            int board_id = (int)BoardIds.SYNTHETIC_BOARD;
-            board_shim = new BoardShim(board_id, input_params);
+            board_shim = InitializeCytonBoard();
+
             board_shim.prepare_session();
-            board_shim.start_stream(450000, "file://actual_brainflow_data.csv:w");
-            sampling_rate = BoardShim.get_sampling_rate(board_id);
+            board_shim.start_stream(450000, "file:///tmp/brainflow_stream.csv:w");
+
+            sampling_rate = BoardShim.get_sampling_rate((int)BoardIds.CYTON_BOARD);
             Debug.Log("Brainflow streaming was started");
         }
         catch (BrainFlowException e)
