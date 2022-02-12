@@ -8,40 +8,20 @@ using System.Threading;
 using uPLibrary.Networking.M2Mqtt;
 using uPLibrary.Networking.M2Mqtt.Messages;
 
+
 namespace Emotions 
 {
-[Serializable]
-class SignalFrame
-{
-    public float time;
-
-    public int screenWidth;
-    public int screenHeight;
-    public float period;
-
-    public int channelsShape;
-    public string device;
-
-    public float[] boardData;
-    public string videoFrame;
-}
-
-[Serializable]
-class SignalEvent
-{
-    public float time;
-    public string type;
-}
-
 [RequireComponent(typeof(Camera))]
 public class EmotionsSDK : MonoBehaviour 
 {
     private Thread mqttThread;
 
-    private Queue<SignalFrame> frameQueue;
+    private Queue<FrameMessage> frameQueue;
     private MqttClient mqttClient;
+
     private BoardRecorder boardRecorder;
     private ScreenRecorder screenRecorder;
+    private WebCamRecorder webCamRecorder;
 
     private bool threadIsProcessing;
     private bool terminateThreadWhenDone;
@@ -51,12 +31,15 @@ public class EmotionsSDK : MonoBehaviour
     
     void Start () 
     {
-        var screenWidth = GetComponent<Camera>().pixelWidth;
-        var screenHeight = GetComponent<Camera>().pixelHeight;
+        var cameraComponent = GetComponent<Camera>();
+        var screenWidth = cameraComponent.pixelWidth;
+        var screenHeight = cameraComponent.pixelHeight;
 
-        frameQueue = new Queue<SignalFrame>();
+        frameQueue = new Queue<FrameMessage>();
+
         boardRecorder = new BoardRecorder(minPeriod);
-        screenRecorder = new ScreenRecorder(screenWidth, screenHeight);
+        screenRecorder = new ScreenRecorder(screenWidth, screenHeight, minPeriod);
+        webCamRecorder = new WebCamRecorder(minPeriod);
 
         mqttClient = new MqttClient("localhost"); 
         var clientId = Guid.NewGuid().ToString();
@@ -88,20 +71,15 @@ public class EmotionsSDK : MonoBehaviour
 
         lastFrameTime = Time.time;
 
-        var signalFrame = new SignalFrame();
-
+        var screenVideoFrame = screenRecorder.GetData();
+        // var boardFrame = boardRecorder.GetData();
+        var webCamFrame = webCamRecorder.GetData();
+        
+        var signalFrame = new FrameMessage();
         signalFrame.time = lastFrameTime;
-
-        var videoFrame = screenRecorder.GetData();
-        signalFrame.videoFrame = Convert.ToBase64String(videoFrame);
-        signalFrame.screenWidth = screenRecorder.screenWidth;
-        signalFrame.screenHeight = screenRecorder.screenHeight;
-        signalFrame.period = minPeriod;
-
-        var boardData = boardRecorder.GetData();
-        signalFrame.boardData = boardData;
-        signalFrame.channelsShape = boardRecorder.channels;
-        signalFrame.device = boardRecorder.device;
+        signalFrame.screenVideoFrame = screenVideoFrame;
+        signalFrame.webCamFrame = webCamFrame;
+        // signalFrame.boardFrame = boardFrame;
 
         frameQueue.Enqueue(signalFrame);
     }
@@ -126,7 +104,7 @@ public class EmotionsSDK : MonoBehaviour
     }
 
     public void SendEvent(string eventType) {
-        var signalEvent = new SignalEvent();
+        var signalEvent = new EventMessage();
         signalEvent.time = Time.time;
         signalEvent.type = eventType;
 

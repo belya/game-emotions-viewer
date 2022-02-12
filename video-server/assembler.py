@@ -13,55 +13,22 @@ from tqdm import tqdm
 # TODO restore proper image
 # TODO sort frame order
 
-if __name__ == '__main__':
-    devices = json.load(open('devices.json'))
+def restore_video(client_id, json_frames, field):
+    print(f"Converting video for {field}")
 
-    client_id = sys.argv[1]
-    dir_path = f"./data/{client_id}/"
-
-    # Frame reading
+    first_frame = json_frames[0][field]
+    screen_width = first_frame['screenWidth']
+    screen_height = first_frame['screenHeight']
+    video_fps = round(1 / first_frame["period"])
 
     frame_order = {}
-    signal_order = {}
-
-    channels = None
-    channels_shape = None
-    screen_width = None
-    screen_height = None
-    video_fps = None
-    sampling_rate = None
-
-    for file in tqdm(list(os.listdir(dir_path))):
-        if ".json" not in file:
-            continue
-
-        path = os.path.join(dir_path, file)
-        try:
-            message_json = json.load(open(path))
-        except:
-            print(f"{file} is unreadable")
-
-        screen_width = message_json['screenWidth']
-        screen_height = message_json['screenHeight']
-        video_fps = round(1 / message_json["period"])
-
-        device = message_json['device']
-        sampling_rate = devices[device]['sampling_rate']
-        channels = devices[device]['channels']
-        channels_shape = message_json['channelsShape']
-
+    for message_json in tqdm(json_frames):
         frame_time = message_json['time']
-
-        signal_window_size = int(message_json["period"] * sampling_rate)
-        board_data = np.array(message_json['boardData'])
-        signal_order[frame_time] = board_data
-
-        image_data = cv2.imread(message_json['videoFrame'])
+        image_data = cv2.imread(message_json[field]['videoFrameBase64'])
         frame_order[frame_time] = image_data
 
-    # Video restoring
     out_video = cv2.VideoWriter(
-        f'{client_id}_tmp.mp4', 
+        f'{client_id}_{field}_tmp.mp4', 
         cv2.VideoWriter_fourcc(*'mp4v'), 
         video_fps, 
         (screen_width, screen_height), 
@@ -86,9 +53,24 @@ if __name__ == '__main__':
     out_video.release()
 
     print("Video duration:", len(fixed_frames) / video_fps)
-    os.system(f"ffmpeg -i {client_id}_tmp.mp4 -vcodec libx264 -f mp4 -y {client_id}.mp4")
+    os.system(f"ffmpeg -i {client_id}_{field}_tmp.mp4 -vcodec libx264 -f mp4 -y {client_id}_{field}.mp4")
 
-    # Signal restoring
+
+def restore_board_data(client_id, json_frames, field):
+    first_frame = json_frames[0][field]
+    device = first_frame['device']
+    sampling_rate = devices[device]['sampling_rate']
+    channels = devices[device]['channels']
+    channels_shape = first_frame['channelsShape']
+
+    signal_order = {}
+    for message_json in json_frames:
+        frame_time = message_json['time']
+
+        signal_window_size = int(message_json[field]["period"] * sampling_rate)
+        board_data_path = message_json[field]['boardData']
+        board_data = np.load(board_data_path)
+        signal_order[frame_time] = board_data
 
     board_data_sorted = []
 
@@ -105,14 +87,8 @@ if __name__ == '__main__':
 
     board_data_df.set_index('time').to_csv(f'{client_id}.csv')
 
-    # indicators_df = indicators.get_indicators(
-    #     board_data_df, 
-    #     sampling_rate,
-    #     client_id
-    # )
 
-    # Events restoring
-
+def restore_events(client_id):
     events_database = f'./data/{client_id}/events.db'
     conn = sqlite3.connect(events_database)
     events_df = pd.read_sql("""
@@ -124,3 +100,33 @@ if __name__ == '__main__':
         ORDER BY game_time
     """, conn)
     events_df.to_csv(f'{client_id}-events.csv')
+
+
+if __name__ == '__main__':
+    devices = json.load(open('devices.json'))
+
+    client_id = sys.argv[1]
+    dir_path = f"./data/{client_id}/"
+
+    # Frame reading
+
+    json_frames = []
+
+    for file in tqdm(list(os.listdir(dir_path))):
+        if ".json" not in file:
+            continue
+
+        path = os.path.join(dir_path, file)
+        try:
+            message_json = json.load(open(path))
+        except:
+            print(f"{file} is unreadable")
+
+        json_frames.append(message_json)
+
+    json_frames = sorted(json_frames, key=lambda x: x['time'])
+
+    restore_video(client_id, json_frames, 'screenVideoFrame')
+    restore_video(client_id, json_frames, 'webCamFrame')
+    # restore_board_data(client_id, json_frames, 'boardFrame')
+    restore_events(client_id)

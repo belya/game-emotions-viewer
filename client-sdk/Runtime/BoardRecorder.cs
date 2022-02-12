@@ -61,7 +61,7 @@ class BoardRecorder
     }
 
     // Update is called once per frame
-    public float[] GetData()
+    public BoardFrame GetData()
     {
         if (board_shim == null)
         {
@@ -82,7 +82,13 @@ class BoardRecorder
                 data[i * doubleData.GetLength(1) + j] = (float) doubleData[i, j];
         }
 
-        return data;
+        var frame = new BoardFrame();
+
+        frame.boardData = data;
+        frame.channelsShape = this.channels;
+        frame.device = this.device;
+
+        return frame;
     }
 
     // you need to call release_session and ensure that all resources correctly released
