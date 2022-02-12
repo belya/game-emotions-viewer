@@ -62,8 +62,6 @@ def on_frame_message(client_id, message_json):
     message_path = f'./data/{client_id}/frame-{message_time}.json'
     print(f"Receiving FRAME message from {client_id}, {message_time}")
 
-    # del message_json['webCamFrame']
-
     preprocess_video_frame(client_id, message_json, 'webCamFrame')
     preprocess_video_frame(client_id, message_json, 'screenVideoFrame')
     preprocess_board_frame(client_id, message_json, 'boardFrame')

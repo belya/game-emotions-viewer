@@ -87,6 +87,7 @@ class BoardRecorder
         frame.boardData = data;
         frame.channelsShape = this.channels;
         frame.device = this.device;
+        frame.period = this.period;
 
         return frame;
     }

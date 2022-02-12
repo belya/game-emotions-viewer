@@ -16,6 +16,7 @@ namespace Emotions
         public int channelsShape;
         public string device;
         public float[] boardData;
+        public float period;
     }
 
     [Serializable]

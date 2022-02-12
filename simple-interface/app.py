@@ -57,7 +57,7 @@ st.sidebar.markdown("""
  * Patient: NOOMKCALB
 """)
 
-eventql_query = st.sidebar.text_input('EventQL query:', '[match3x]')
+eventql_query = st.sidebar.text_input('EventQL query:', '[Chew]')
 # show_events = st.sidebar.checkbox('Show events', True)
 # show_fragments = st.sidebar.checkbox('Show selected fragments', True)
 
@@ -86,10 +86,15 @@ stat_text = [
 for i, score in enumerate(abtest_stats['scores']):
     stat_text.append(f'* {channel_names[i].capitalize()} p-value: {score * 100:.2f}%')
 
-os.system('cp ./mock-session.mp4 ./frontend/public/')
+os.system('cp ./mock-session_screenVideoFrame.mp4 ./frontend/public/')
+os.system('cp ./mock-session_webCamFrame.mp4 ./frontend/public/')
+
 
 game_viewer_component(
-    video='./mock-session.mp4',
+    video={
+        'screen': './mock-session_screenVideoFrame.mp4',
+        'webcam': './mock-session_webCamFrame.mp4'
+    },
     signal={
         'time': time.tolist(),
         'duration': time.max(),

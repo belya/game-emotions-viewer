@@ -72,14 +72,14 @@ public class EmotionsSDK : MonoBehaviour
         lastFrameTime = Time.time;
 
         var screenVideoFrame = screenRecorder.GetData();
-        // var boardFrame = boardRecorder.GetData();
+        var boardFrame = boardRecorder.GetData();
         var webCamFrame = webCamRecorder.GetData();
         
         var signalFrame = new FrameMessage();
         signalFrame.time = lastFrameTime;
         signalFrame.screenVideoFrame = screenVideoFrame;
         signalFrame.webCamFrame = webCamFrame;
-        // signalFrame.boardFrame = boardFrame;
+        signalFrame.boardFrame = boardFrame;
 
         frameQueue.Enqueue(signalFrame);
     }

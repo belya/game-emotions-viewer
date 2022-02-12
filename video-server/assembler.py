@@ -126,7 +126,7 @@ if __name__ == '__main__':
 
     json_frames = sorted(json_frames, key=lambda x: x['time'])
 
+    restore_board_data(client_id, json_frames, 'boardFrame')
     restore_video(client_id, json_frames, 'screenVideoFrame')
     restore_video(client_id, json_frames, 'webCamFrame')
-    # restore_board_data(client_id, json_frames, 'boardFrame')
     restore_events(client_id)

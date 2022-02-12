@@ -214,8 +214,8 @@ class App extends StreamlitComponentBase {
 
     return [{
       type: 'bar',
-      x: [flowSignal, boredomSignal, anxietySignal],
-      y: ['Flow', 'Boredom', 'Anxiety'],
+      x: [flowSignal, anxietySignal, boredomSignal],
+      y: ['Flow', 'Anxiety', 'Boredom'],
       orientation: 'h'
     }]
   }
@@ -231,12 +231,15 @@ class App extends StreamlitComponentBase {
       events: updatedEvents,
       realtime: updatedRealtimeIndicators
     });
+
+    document.getElementById('webcamVideo').currentTime = currentTime;
   }
 
   render() {
     var self = this;
     var durationTimeline = this.state.signal.duration;
-    var videoPath = this.state.video;
+    var screenVideoPath = this.state.video.screen;
+    var webcamVideoPath = this.state.video.webcam;
 
     function dateFormat(ms) {
       var formatString = new Date(ms).toLocaleTimeString('en-US', { 
@@ -258,13 +261,19 @@ class App extends StreamlitComponentBase {
     return (
       <div className="App" style={{width: componentWidth}}>
         <div className="row">
-          <div className="col-md-7 player">
+          <div className="col-md-5 player">
             <video style={{width: '100%'}} height="240" controls onTimeUpdate={onVideoTimeChange}>
-              <source src={videoPath} type="video/mp4"/>
+              <source src={screenVideoPath} type="video/mp4"/>
               Your browser does not support the video tag.
             </video> 
           </div>
-          <div className="col-md-5 realtime-indicators">
+          <div className="col-md-4 player">
+            <video style={{width: '100%'}} id="webcamVideo" height="240">
+              <source src={webcamVideoPath} type="video/mp4"/>
+              Your browser does not support the video tag.
+            </video> 
+          </div>
+          <div className="col-md-3 realtime-indicators">
             <Plot
                 data={this.state.realtime}
                 layout={{
