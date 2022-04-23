@@ -36,3 +36,28 @@
     transform: rotate(360deg);
   }
 }
+
+/*Video player*/
+
+.video-container {
+  position:relative;
+  width: 100%;
+  height: 300px;
+  padding: 0px;
+}
+
+.gameplay-video {
+    position: absolute; 
+    height: 100%;
+    width: 100%;
+    left: 0;
+    background-color: black;
+}
+
+.webcam-video {
+    height: 40%;
+    width: 15%;
+    right: 0;
+    top: 0px;
+    position: absolute;
+}

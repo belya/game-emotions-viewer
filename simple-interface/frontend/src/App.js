@@ -220,7 +220,7 @@ class App extends StreamlitComponentBase {
     }]
   }
 
-  updateCurrentTime(currentTime) {
+  updateCurrentTime(currentTime, updateVideo) {
     var updatedEvents = this.getUpdatedEvents(currentTime);
     var updatedTraces = this.getUpdatedTraces(currentTime);
     var updatedRealtimeIndicators = this.getUpdatedRealtimeIndicators(currentTime);
@@ -232,7 +232,13 @@ class App extends StreamlitComponentBase {
       realtime: updatedRealtimeIndicators
     });
 
-    document.getElementById('webcamVideo').currentTime = currentTime;
+    if (updateVideo) {
+      var webcamVideo = document.getElementById('webcamVideo');
+      var gameplayVideo = document.getElementById('gameplayVideo');
+
+      webcamVideo.currentTime = currentTime;
+      gameplayVideo.currentTime = currentTime;
+    }
   }
 
   render() {
@@ -254,46 +260,74 @@ class App extends StreamlitComponentBase {
     var signalSizeMilliseconds = 1000 * durationTimeline;
 
     function onVideoTimeChange(e) {
+      var gameplayVideo = document.getElementById('gameplayVideo');
+      var currentTime = gameplayVideo.currentTime;
+      self.updateCurrentTime(currentTime, false);
+    }
+    setInterval(onVideoTimeChange, 100)
+
+    function onVideoPlay(e) {
       var currentTime = e.target.currentTime;
-      self.updateCurrentTime(currentTime);
+      var webcamVideo = document.getElementById('webcamVideo');
+      webcamVideo.currentTime = currentTime;
+      webcamVideo.play()
+    }
+
+    function onVideoPause(e) {
+      var currentTime = e.target.currentTime;
+      var webcamVideo = document.getElementById('webcamVideo');
+      webcamVideo.currentTime = currentTime;
+      webcamVideo.pause()
+    }
+
+    function onPlotlyEventClick(e) {
+      var currentTime = e.points[0].x;
+      self.updateCurrentTime(currentTime, true);
+    }
+
+    function onTimelineEventClick(eventId) {
+      var currentTime = self.props.args.events.filter(e => e.eventId == eventId)[0].start_sec
+      self.updateCurrentTime(currentTime, true);
     }
 
     return (
       <div className="App" style={{width: componentWidth}}>
         <div className="row">
-          <div className="col-md-5 player">
-            <video style={{width: '100%'}} height="240" controls onTimeUpdate={onVideoTimeChange}>
+          <div className='col-md-12 video-container'>
+            <video className="gameplay-video" id="gameplayVideo" controls onPlay={onVideoPlay} onPause={onVideoPause}>
               <source src={screenVideoPath} type="video/mp4"/>
               Your browser does not support the video tag.
             </video> 
-          </div>
-          <div className="col-md-4 player">
-            <video style={{width: '100%'}} id="webcamVideo" height="240">
+            <video className="webcam-video" id="webcamVideo">
               <source src={webcamVideoPath} type="video/mp4"/>
               Your browser does not support the video tag.
             </video> 
           </div>
-          <div className="col-md-3 realtime-indicators">
-            <Plot
-                data={this.state.realtime}
-                layout={{
-                  width: componentWidth * 1/3,
-                  height: 230,
-                  margin: {
-                    l: 60,
-                    r: 5,
-                    b: 5,
-                    t: 5,
-                    pad: 4
-                  }
-                }}
-              />
+        </div>
+        <div className="row">
+          <div className="col-md-12 timeline">
+            <Timeline 
+              x={startSignalTime}
+              y={startSignalTime + signalSizeMilliseconds}
+              width={componentWidth} 
+              height={150} 
+              events={this.state.events} 
+              lanes={this.state.lanes} 
+              dateFormat={dateFormat} 
+              zoomLevels={[
+                '1 min',
+                '10 secs',
+                '1 sec'
+              ]}
+              onEventClick={onTimelineEventClick}
+            />
           </div>
         </div>
         <div className="row">
           <div className="col-md-12 indicators">
             <Plot
               data={this.state.traces}
+              onClick={onPlotlyEventClick}
               layout={{
                 grid: {
                     rows: 3,
@@ -320,24 +354,6 @@ class App extends StreamlitComponentBase {
                   bgcolor: 'rgba(255,255,255,0)'
                 }
               }}
-            />
-          </div>
-        </div>
-        <div className="row">
-          <div className="col-md-12 timeline">
-            <Timeline 
-              x={startSignalTime}
-              y={startSignalTime + signalSizeMilliseconds}
-              width={componentWidth} 
-              height={200} 
-              events={this.state.events} 
-              lanes={this.state.lanes} 
-              dateFormat={dateFormat} 
-              zoomLevels={[
-                '1 min',
-                '10 secs',
-                '1 sec'
-              ]}
             />
           </div>
         </div>
