@@ -1,0 +1,8 @@
+version: '2.2'
+services:
+  init-frontend:
+    image: nikolaik/python-nodejs:python3.8-nodejs14
+    volumes:
+      - ./simple-interface/frontend:/opt/emotions-dashboard/frontend
+    working_dir: /opt/emotions-dashboard/frontend
+    command: npm install
