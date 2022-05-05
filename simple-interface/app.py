@@ -57,34 +57,7 @@ st.sidebar.markdown("""
  * Patient: NOOMKCALB
 """)
 
-eventql_query = st.sidebar.text_input('EventQL query:', '[Chew]')
-# show_events = st.sidebar.checkbox('Show events', True)
-# show_fragments = st.sidebar.checkbox('Show selected fragments', True)
-
-unique_events = events_df['type'].unique()
-events_dict = eventql.create_events_dictionary(unique_events)
-source_string = eventql.get_eventql_source_string(events_df, events_dict=events_dict)
-eventql_regex = eventql.extract_regex(eventql_query, events_dict=events_dict)
-fragments_df = eventql.search_regex_indices(events_df, source_string, eventql_regex)
-
-abtest_stats = stats.calculate_simple_statistics(
-    timeseries, 
-    fragments_df
-)
-
-fragments_df = process_events(fragments_df, 'fragments-lane', ends=True)
-
-events_json = events_df.to_dict(orient='records') +\
-    fragments_df.to_dict(orient='records')
-
-stat_text = [
-    "## General Event Information",
-    f"* Repeats: {abtest_stats['count']}",
-    f"* Avg. duration: {abtest_stats['length'] / 100:.2f} sec.",
-]
-
-for i, score in enumerate(abtest_stats['scores']):
-    stat_text.append(f'* {channel_names[i].capitalize()} p-value: {score * 100:.2f}%')
+events_json = events_df.to_dict(orient='records') #+\
 
 os.system('cp ./mock-session_screenVideoFrame.mp4 ./frontend/public/')
 os.system('cp ./mock-session_webCamFrame.mp4 ./frontend/public/')
@@ -104,5 +77,3 @@ game_viewer_component(
     },
     events=events_json
 )
-
-st.sidebar.markdown("\n".join(stat_text))
