@@ -4,6 +4,6 @@ set -m
 
 cd ./server/ && streamlit run ./app.py &
 
-cd ./frontend/ && HOST=localhost npm start 
+cd ./frontend/ && npm start 
  
 fg %1

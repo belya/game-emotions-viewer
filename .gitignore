@@ -3,6 +3,7 @@
 __pycache__
 *.csv
 *.mp4
+.env
 
 # Video React component
 # dependencies
@@ -36,3 +37,7 @@ brainflow_svm.model.meta
 
 # Unused libs
 /component-template
+
+#Sessions
+/sessions
+!/sessions/.gitkeep
