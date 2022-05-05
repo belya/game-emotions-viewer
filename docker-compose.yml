@@ -1,0 +1,15 @@
+version: '2.2'
+services:
+  emotions-dashboard:
+    network_mode: host
+    build: 
+      context: ./simple-interface
+    # environment:
+    #   POSTGRES_USER: airflow
+    #   POSTGRES_PASSWORD: airflow
+    #   POSTGRES_DB: airflow
+    volumes:
+      - ./simple-interface/server:/opt/emotions-dashboard/server
+      - ./simple-interface/frontend:/opt/emotions-dashboard/frontend
+      - ./sessions:/opt/emotions-dashboard/sessions
+    stdin_open: true

@@ -3,14 +3,13 @@ import streamlit.components.v1 as components
 
 import pandas as pd
 import numpy as np
-
-from libs import vis
-from libs import stats 
-from libs import eventql
+import json
 
 import os
 
-# -- Set page config
+query_params = st.experimental_get_query_params()
+session_id = query_params.get('session_id', ['mock-session'])[0]
+session_path = f'/opt/emotions-dashboard/sessions/{session_id}'
 
 def process_events(events_df, lane_id, ends=False):
     events_df['startTimeMillis'] = events_df['start']
@@ -33,7 +32,7 @@ game_viewer_component = components.declare_component(
     url="http://localhost:3000"
 )
 
-timeseries_df = pd.read_csv('mock-session-indicators.csv')
+timeseries_df = pd.read_csv(f'{session_path}/indicators.csv')
 timeseries_df = timeseries_df.set_index('time')
 timeseries = timeseries_df.values.T
 time = timeseries_df.index.values
@@ -41,26 +40,28 @@ time = timeseries_df.index.values
 channel_names = dict(enumerate(timeseries_df.columns))
 
 
-events_df = pd.read_csv('mock-session-events.csv').drop(columns="Unnamed: 0")
+events_df = pd.read_csv(f'{session_path}/events.csv').drop(columns="Unnamed: 0")
 
 events_df['start'] = events_df['start_sec']
 events_df['end'] = events_df['end_sec']
 
 events_df = process_events(events_df, 'events-lane')
 
+game_json = json.load(open(f'{session_path}/description.json'))
+
 st.sidebar.markdown("""
- ## Match-3, by Winterbolt Games
- * Record time: 07.01.2022, 20:45
- * Duration: 1 min 28 sec
+ ## {game_title}, by {game_author}
+ * Record time: {record_time}
+ * Duration: {duration}
  * Device: OpenBCI Cyton
    * 8 channels, 250 Hz
- * Patient: NOOMKCALB
-""")
+ * Patient: {patient_name}
+""".format(**game_json))
 
 events_json = events_df.to_dict(orient='records') #+\
 
-os.system('cp ./mock-session_screenVideoFrame.mp4 ./frontend/public/')
-os.system('cp ./mock-session_webCamFrame.mp4 ./frontend/public/')
+os.system(f'cp {session_path}/screen_video.mp4 ../frontend/public/mock-session_screenVideoFrame.mp4')
+os.system(f'cp {session_path}/webcam_video.mp4 ../frontend/public/mock-session_webCamFrame.mp4')
 
 
 game_viewer_component(
