@@ -11,6 +11,8 @@ query_params = st.experimental_get_query_params()
 session_id = query_params.get('session_id', ['mock-session'])[0]
 session_path = f'/opt/emotions-dashboard/sessions/{session_id}'
 
+host = os.environ.get('HOST', 'localhost')
+
 def process_events(events_df, lane_id, ends=False):
     events_df['startTimeMillis'] = events_df['start']
     if ends:
@@ -29,7 +31,7 @@ st.set_page_config(
 
 game_viewer_component = components.declare_component(
     "game_viewer",
-    url="http://localhost:3000"
+    url=f"http://{host}:3000"
 )
 
 timeseries_df = pd.read_csv(f'{session_path}/indicators.csv')
