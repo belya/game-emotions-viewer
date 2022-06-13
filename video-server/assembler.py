@@ -7,7 +7,7 @@ import sqlite3
 import cv2
 from tqdm import tqdm
 
-# from libs import eeg
+from libs import indicators
 
 # TODO calculate frame rate
 # TODO restore proper image
@@ -86,6 +86,12 @@ def restore_board_data(client_id, json_frames, field):
     board_data_df['time'] = board_data_df.index / sampling_rate
 
     board_data_df.set_index('time').to_csv(f'{client_id}.csv')
+    return board_data_df, sampling_rate, channels
+
+
+def restore_indicators(client_id, board_data_df, sampling_rate, channels):
+    indicators_df = indicators.get_indicators(board_data_df, sampling_rate, channels)
+    indicators_df.to_csv(f'{client_id}-indicators.csv')
 
 
 def restore_events(client_id):
@@ -126,7 +132,7 @@ if __name__ == '__main__':
 
     json_frames = sorted(json_frames, key=lambda x: x['time'])
 
-    restore_board_data(client_id, json_frames, 'boardFrame')
-    restore_video(client_id, json_frames, 'screenVideoFrame')
+    board_data_df, sampling_rate, channels = restore_board_data(client_id, json_frames, 'boardFrame')
+    restore_indicators(client_id, board_data_df, sampling_rate, channels)
     restore_video(client_id, json_frames, 'webCamFrame')
     restore_events(client_id)

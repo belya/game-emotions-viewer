@@ -4,62 +4,80 @@ import matplotlib
 import numpy as np
 import json
 
-supported_bands = {
-    "alpha": (7, 14),
-    "low-beta": (15, 25)
+from scipy.signal import hilbert
+
+rhythms = {
+    'theta': (4, 8), 
+    'alpha': (8, 14), 
+    'beta': (15, 30)
 }
 
-def get_raw_signal(signal_df, ch_types, sampling_freq):
-    additional_channels = ["x", "y", "z", "time", "timestamp"]
+indicator_names = {
+    'alpha': 'flow',
+    'beta': 'boredom',
+    'theta': 'anxiety'
+}
 
-    main_channels_num = (signal_df.shape[1] - 1 - len(additional_channels))
-    main_channels = [f"channel_{i}" for i in range(main_channels_num)] 
-
-    ch_names = ["#"] + main_channels + additional_channels
-    signal_df.columns = ch_names
+def get_raw_signal(signal_df, sampling_freq, ch_names):
+    # signal_df.columns = ch_names
 
     # signal_df["time"] = pd.to_datetime(signal_df["time"]).dt.strftime("%Y-%m-%d %H:%M:%S")
-    signal_df["time"] = pd.to_datetime(signal_df["timestamp"], unit='ms')
+#     signal_df["time"] = pd.to_datetime(signal_df["timestamp"], unit='ms')
     
+    ch_types = ["eeg"] * len(ch_names)
+
     signal_info = mne.create_info(
         ch_names, 
         ch_types=ch_types, 
-        sfreq=sampling_freq
+        sfreq=float(sampling_freq)
     )
     signal_info.set_montage('standard_1020')
-    signal_info["start_time"] = signal_df["time"].min()
     
     data = signal_df[ch_names].values.T
+
     raw = mne.io.RawArray(data, signal_info)
 
-    # Filter line noise
     raw.notch_filter(50, notch_widths=3)
 
-    # Filter nessesary frequencies
     raw.filter(1, 50)
     
     return raw
 
-def get_bands(raw, sampling_freq, channels, frequencies, stim_channel_name=None):
-    channel_raw = raw.copy().pick(channels).get_data(channels)
-    channel_fft = np.abs(
-        mne.time_frequency.stft(channel_raw, sampling_freq, 16)[:, frequencies, :]
-    )
-    
-    channel_alpha = channel_fft.mean(axis=0).mean(axis=0)
-    
-    signal_info = mne.create_info(
-        ["amplitude"], 
-        ch_types=["misc"], 
-        sfreq=sampling_freq // 16
-    )
-    signal_info["start_time"] = raw.info["start_time"]
-    
-    data = [channel_alpha]
-    
-    return mne.io.RawArray(data, signal_info)
+def process_indicator(averaged_amplitude_data, sfreq, downsample_factor=10):
+    insight_points = averaged_amplitude_data.shape[0] / sfreq * 1 * 1
+    quantile_insights = insight_points / averaged_amplitude_data.shape[0]
+    level_of_interest = np.quantile(averaged_amplitude_data, 1 - quantile_insights)
 
-def get_indicators(signal_df):
-    # Get raw signal
-    # Extract bands for channels
-    # Compose bands
+    indicator = pd.Series(averaged_amplitude_data > level_of_interest).rolling(int(sfreq) * 5, center=True).mean().fillna(0)
+    indicator = indicator / indicator.max()
+
+    indicator = indicator[indicator.index % downsample_factor == 0].copy()
+
+    return indicator
+
+def get_indicators(signal_df, sampling_freq, ch_names):
+    indicators_df = pd.DataFrame()
+    selected_channels = 'Fp1, AF7, AF3, F7, F5, F3, FT7, FC5, FC3, FC1'.split(', ')
+    selected_channels = [c for c in selected_channels if c in signal_df.columns]
+
+    assert len(selected_channels) > 0
+
+    raw = get_raw_signal(signal_df, sampling_freq, ch_names)
+
+    for band, (start_f, end_f) in rhythms.items():
+        channel_data = raw.copy().pick(selected_channels).filter(start_f, end_f).get_data()
+
+        analytical_signal = hilbert(channel_data)
+        amplitude_data = np.abs(analytical_signal)
+        averaged_amplitude_data = amplitude_data.mean(axis=0)
+        sfreq = raw.info['sfreq']
+
+        indicator = process_indicator(averaged_amplitude_data, sfreq)
+
+        indicator_name = indicator_names[band]
+        indicators_df[indicator_name] = indicator
+
+    indicators_df.index = indicators_df.index / sfreq
+    indicators_df.index.name = 'time'
+
+    return indicators_df
