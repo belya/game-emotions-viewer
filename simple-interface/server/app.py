@@ -34,7 +34,7 @@ game_viewer_component = components.declare_component(
     url=f"http://{host}:3000"
 )
 
-timeseries_df = pd.read_csv(f'{session_path}/indicators.csv')
+timeseries_df = pd.read_csv(f'{session_path}/{session_id}-indicators.csv')
 timeseries_df = timeseries_df.set_index('time')
 timeseries = timeseries_df.values.T
 time = timeseries_df.index.values
@@ -42,28 +42,29 @@ time = timeseries_df.index.values
 channel_names = dict(enumerate(timeseries_df.columns))
 
 
-events_df = pd.read_csv(f'{session_path}/events.csv').drop(columns="Unnamed: 0")
+events_df = pd.read_csv(f'{session_path}/{session_id}-events.csv').drop(columns="Unnamed: 0")
 
 events_df['start'] = events_df['start_sec']
 events_df['end'] = events_df['end_sec']
 
 events_df = process_events(events_df, 'events-lane')
 
-game_json = json.load(open(f'{session_path}/description.json'))
+# game_json = json.load(open(f'{session_path}/{session_id}-description.json'))
 
-st.sidebar.markdown("""
- ## {game_title}, by {game_author}
- * Record time: {record_time}
- * Duration: {duration}
- * Device: OpenBCI Cyton
-   * 8 channels, 250 Hz
- * Patient: {patient_name}
-""".format(**game_json))
+# st.sidebar.markdown("""
+#  ## {game_title}, by {game_author}
+#  * Record time: {record_time}
+#  * Duration: {duration}
+#  * Device: OpenBCI Cyton
+#    * 8 channels, 250 Hz
+#  * Patient: {patient_name}
+# """.format(**game_json))
 
 events_json = events_df.to_dict(orient='records') #+\
 
-os.system(f'cp {session_path}/screen_video.mp4 ../frontend/public/mock-session_screenVideoFrame.mp4')
-os.system(f'cp {session_path}/webcam_video.mp4 ../frontend/public/mock-session_webCamFrame.mp4')
+# TODO add static server to serve session files
+os.system(f'cp {session_path}/{session_id}_screenVideoFrame.mp4 ../frontend/public/mock-session_screenVideoFrame.mp4')
+os.system(f'cp {session_path}/{session_id}_webCamFrame.mp4 ../frontend/public/mock-session_webCamFrame.mp4')
 
 
 game_viewer_component(

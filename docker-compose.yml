@@ -17,7 +17,7 @@ services:
     build: 
       context: ./simple-interface
     environment:
-      HOST: "${HOST}"
+      HOST: "localhost"
     #   POSTGRES_USER: airflow
     #   POSTGRES_PASSWORD: airflow
     #   POSTGRES_DB: airflow
