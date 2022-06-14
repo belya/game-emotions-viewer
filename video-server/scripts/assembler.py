@@ -1,4 +1,6 @@
 import sys
+sys.path.append('../')
+
 import json
 import numpy as np
 import os
@@ -12,6 +14,8 @@ from libs import indicators
 # TODO calculate frame rate
 # TODO restore proper image
 # TODO sort frame order
+
+data_dir = '../data'
 
 def restore_video(client_id, json_frames, field):
     print(f"Converting video for {field}")
@@ -28,7 +32,7 @@ def restore_video(client_id, json_frames, field):
         frame_order[frame_time] = image_data
 
     out_video = cv2.VideoWriter(
-        f'./data/{client_id}/{client_id}_{field}_tmp.mp4', 
+        f'{data_dir}/{client_id}/{client_id}_{field}_tmp.mp4', 
         cv2.VideoWriter_fourcc(*'mp4v'), 
         video_fps, 
         (screen_width, screen_height), 
@@ -53,7 +57,7 @@ def restore_video(client_id, json_frames, field):
     out_video.release()
 
     print("Video duration:", len(fixed_frames) / video_fps)
-    os.system(f"ffmpeg -i ./data/{client_id}/{client_id}_{field}_tmp.mp4 -vcodec libx264 -f mp4 -y ./data/{client_id}/{client_id}_{field}.mp4")
+    os.system(f"ffmpeg -i {data_dir}/{client_id}/{client_id}_{field}_tmp.mp4 -vcodec libx264 -f mp4 -y {data_dir}/{client_id}/{client_id}_{field}.mp4")
 
 
 def restore_board_data(client_id, json_frames, field):
@@ -85,17 +89,17 @@ def restore_board_data(client_id, json_frames, field):
     board_data_df = pd.DataFrame(board_data_concat.T[:, 1:len(channels) + 1], columns=channels)
     board_data_df['time'] = board_data_df.index / sampling_rate
 
-    board_data_df.set_index('time').to_csv(f'./data/{client_id}/{client_id}-raw-signal.csv')
+    board_data_df.set_index('time').to_csv(f'{data_dir}/{client_id}/{client_id}-raw-signal.csv')
     return board_data_df, sampling_rate, channels
 
 
 def restore_indicators(client_id, board_data_df, sampling_rate, channels):
     indicators_df = indicators.get_indicators(board_data_df, sampling_rate, channels)
-    indicators_df.to_csv(f'./data/{client_id}/{client_id}-indicators.csv')
+    indicators_df.to_csv(f'{data_dir}/{client_id}/{client_id}-indicators.csv')
 
 
 def restore_events(client_id):
-    events_database = f'./data/{client_id}/events.db'
+    events_database = f'{data_dir}/{client_id}/events.db'
     conn = sqlite3.connect(events_database)
     events_df = pd.read_sql("""
         SELECT 
@@ -105,25 +109,28 @@ def restore_events(client_id):
         FROM events
         ORDER BY game_time
     """, conn)
-    events_df.to_csv(f'./data/{client_id}/{client_id}-events.csv')
+    events_df.to_csv(f'{data_dir}/{client_id}/{client_id}-events.csv')
 
 
 if __name__ == '__main__':
-    devices = json.load(open('devices.json'))
+    devices = json.load(open('../devices.json'))
 
     client_ids = [
         path
-        for path in os.listdir('./data/')
-        if os.path.isdir(f'./data/{path}')
+        for path in os.listdir(f'{data_dir}/')
+        if os.path.isdir(f'{data_dir}/{path}')
     ]
 
     if len(sys.argv) > 1:
         client_id = sys.argv[1]
-        client_ids = [f"./data/{client_id}/"]
+        client_ids = [f"{data_dir}/{client_id}/"]
 
     for client_id in client_ids:
         # Frame reading
-        dir_path = f'./data/{client_id}'
+        dir_path = f'{data_dir}/{client_id}'
+
+        if os.path.exists(dir_path + '/compiled'):
+            continue
 
         json_frames = []
 
@@ -148,3 +155,5 @@ if __name__ == '__main__':
         restore_video(client_id, json_frames, 'webCamFrame')
         restore_video(client_id, json_frames, 'screenVideoFrame')
         restore_events(client_id)
+
+        os.system(f'touch {dir_path}/compiled')
