@@ -49,16 +49,16 @@ events_df['end'] = events_df['end_sec']
 
 events_df = process_events(events_df, 'events-lane')
 
-# game_json = json.load(open(f'{session_path}/{session_id}-description.json'))
+game_json = json.load(open(f'/opt/emotions-dashboard/sessions/mock-description.json'))
 
-# st.sidebar.markdown("""
-#  ## {game_title}, by {game_author}
-#  * Record time: {record_time}
-#  * Duration: {duration}
-#  * Device: OpenBCI Cyton
-#    * 8 channels, 250 Hz
-#  * Patient: {patient_name}
-# """.format(**game_json))
+st.sidebar.markdown("""
+ ## {game_title}, by {game_author}
+ * Record time: {record_time}
+ * Duration: {duration}
+ * Device: OpenBCI Cyton
+   * 8 channels, 250 Hz
+ * Patient: {patient_name}
+""".format(**game_json))
 
 events_json = events_df.to_dict(orient='records') #+\
 
