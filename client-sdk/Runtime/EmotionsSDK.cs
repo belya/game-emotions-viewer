@@ -43,7 +43,8 @@ public class EmotionsSDK : MonoBehaviour
         webCamRecorder = new WebCamRecorder(minPeriod);
 
         mqttClient = new MqttClient("localhost"); 
-        clientId = Guid.NewGuid().ToString();
+        // clientId = Guid.NewGuid().ToString();
+        clientId = Application.identifier + "_" + System.DateTime.Now.ToString("MM-dd-yyyy-hh-mm-ss");
         mqttClient.Connect(clientId); 
 
         if (mqttThread != null && (threadIsProcessing || mqttThread.IsAlive)) {
