@@ -1,3 +1,5 @@
+import os
+
 from time import sleep
 import paho.mqtt.client as mqtt
 import json
@@ -10,12 +12,37 @@ import base64
 import cv2
 
 
+data_dir = '../data'
+
+def init_session(client_id):
+    if not os.path.exists(f'{data_dir}/{client_id}'):
+        os.system(f'mkdir {data_dir}/{client_id}')
+        os.system(f'mkdir {data_dir}/{client_id}/boardFrame')
+        os.system(f'mkdir {data_dir}/{client_id}/screenVideoFrame')
+        os.system(f'mkdir {data_dir}/{client_id}/webCamFrame')
+        os.system(f'mkdir {data_dir}/{client_id}/jsonFrame')
+
+        events_database = f'{data_dir}/{client_id}/events.db'
+        conn = sqlite3.connect(events_database)
+        
+        cursor = conn.cursor()
+        # TODO time and type as pk
+        cursor.execute(""" 
+            CREATE TABLE IF NOT EXISTS events (
+                ID          INTEGER PRIMARY KEY     AUTOINCREMENT,
+                game_time   FLOAT               NOT NULL,
+                type        CHAR(50)            NOT NULL
+            )
+        """)
+
+        conn.close()
+
 def on_message(client, userdata, message):
-    # print('Message received')
     message_json = json.loads(
         str(message.payload.decode("utf-8"))
     )
-    client_id = "mock-session" # Fix the error!
+    client_id = message_json['clientId'] # Fix the error!
+    init_session(client_id)
 
     if 'frames' in message.topic:
         on_frame_message(client_id, message_json)
@@ -30,7 +57,7 @@ def preprocess_video_frame(client_id, message_json, field):
     # Save image separately
     screen_width = sub_message_json['screenWidth']
     screen_height = sub_message_json['screenHeight']
-    image_path = f"./data/{client_id}/{field}-{message_time}.png"
+    image_path = f"{data_dir}/{client_id}/{field}/{field}-{message_time}.png"
 
     video_frame_base64 = sub_message_json['videoFrameBase64'].encode('utf-8')
     video_frame_bytes = base64.decodebytes(video_frame_base64)
@@ -48,7 +75,7 @@ def preprocess_board_frame(client_id, message_json, field):
     sub_message_json = message_json[field]
     message_time = message_json['time_int']
 
-    board_data_path = f"./data/{client_id}/{field}-{message_time}.npy"
+    board_data_path = f"{data_dir}/{client_id}/{field}/{field}-{message_time}.npy"
     board_data = sub_message_json['boardData']
 
     np.save(board_data_path, board_data)
@@ -59,7 +86,7 @@ def on_frame_message(client_id, message_json):
     message_time = int(message_json['time'] * 1000)
     message_json['time_int'] = message_time
 
-    message_path = f'./data/{client_id}/frame-{message_time}.json'
+    message_path = f'{data_dir}/{client_id}/jsonFrame/frame-{message_time}.json'
     print(f"Receiving FRAME message from {client_id}, {message_time}")
 
     preprocess_video_frame(client_id, message_json, 'webCamFrame')
@@ -71,17 +98,9 @@ def on_frame_message(client_id, message_json):
 
 def on_event_message(client_id, message_json):
     print(f"Receiving EVENT message from {client_id}")
-    events_database = f'./data/{client_id}/events.db'
+    events_database = f'{data_dir}/{client_id}/events.db'
     conn = sqlite3.connect(events_database)
-    cursor = conn.cursor()
-    # TODO time and type as pk
-    cursor.execute(""" 
-        CREATE TABLE IF NOT EXISTS events (
-            ID          INTEGER PRIMARY KEY     AUTOINCREMENT,
-            game_time   FLOAT               NOT NULL,
-            type        CHAR(50)            NOT NULL
-        )
-    """)
+
     cursor.execute("""
         INSERT INTO events (game_time, type)
         VALUES (?, ?)

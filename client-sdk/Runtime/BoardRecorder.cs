@@ -46,7 +46,7 @@ class BoardRecorder
             BoardShim.set_log_file("/tmp/brainflow_log.txt");
             BoardShim.enable_dev_board_logger();
 
-            board_shim = InitializeCytonBoard();
+            board_shim = InitializePlaybackBaord();
 
             board_shim.prepare_session();
             board_shim.start_stream(450000, "file:///tmp/brainflow_stream.csv:w");

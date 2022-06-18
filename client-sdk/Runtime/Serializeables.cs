@@ -33,6 +33,7 @@ namespace Emotions
     public class FrameMessage
     {
         public float time;
+        public string clientId;
 
         public VideoFrame screenVideoFrame;
         public VideoFrame webCamFrame;
@@ -44,5 +45,6 @@ namespace Emotions
     {
         public float time;
         public string type;
+        public string clientId;
     }
 }

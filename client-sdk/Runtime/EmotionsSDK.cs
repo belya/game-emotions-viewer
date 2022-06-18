@@ -18,6 +18,7 @@ public class EmotionsSDK : MonoBehaviour
 
     private Queue<FrameMessage> frameQueue;
     private MqttClient mqttClient;
+    private string clientId;
 
     private BoardRecorder boardRecorder;
     private ScreenRecorder screenRecorder;
@@ -42,7 +43,8 @@ public class EmotionsSDK : MonoBehaviour
         webCamRecorder = new WebCamRecorder(minPeriod);
 
         mqttClient = new MqttClient("localhost"); 
-        var clientId = Guid.NewGuid().ToString();
+        // clientId = Guid.NewGuid().ToString();
+        clientId = Application.identifier + "_" + System.DateTime.Now.ToString("MM-dd-yyyy-hh-mm-ss");
         mqttClient.Connect(clientId); 
 
         if (mqttThread != null && (threadIsProcessing || mqttThread.IsAlive)) {
@@ -80,6 +82,7 @@ public class EmotionsSDK : MonoBehaviour
         signalFrame.screenVideoFrame = screenVideoFrame;
         signalFrame.webCamFrame = webCamFrame;
         signalFrame.boardFrame = boardFrame;
+        signalFrame.clientId = clientId;
 
         frameQueue.Enqueue(signalFrame);
     }
@@ -107,6 +110,7 @@ public class EmotionsSDK : MonoBehaviour
         var signalEvent = new EventMessage();
         signalEvent.time = Time.time;
         signalEvent.type = eventType;
+        signalEvent.clientId = clientId;
 
         var signalEventJson = JsonUtility.ToJson(signalEvent);
         byte[] signalEventBytes = System.Text.Encoding.ASCII.GetBytes(signalEventJson);

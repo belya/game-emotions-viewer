@@ -1,11 +1,23 @@
 version: '2.2'
+
+x-server-common:
+  &server-common
+  network_mode: host
+  build: 
+    context: ./video-server
+  volumes:
+    - ./sessions:/opt/mqtt-server/data
+    - ./video-server/server:/opt/mqtt-server/server
+    - ./video-server/scripts:/opt/mqtt-server/scripts
+    - ./video-server/libs:/opt/mqtt-server/libs
+
 services:
   emotions-dashboard:
     network_mode: host
     build: 
       context: ./simple-interface
     environment:
-      HOST: "${HOST}"
+      HOST: "localhost"
     #   POSTGRES_USER: airflow
     #   POSTGRES_PASSWORD: airflow
     #   POSTGRES_DB: airflow
@@ -14,3 +26,14 @@ services:
       - ./simple-interface/frontend:/opt/emotions-dashboard/frontend
       - ./sessions:/opt/emotions-dashboard/sessions
     stdin_open: true
+
+  mqtt-server:
+    <<: *server-common
+    command: bash -c "cd ./server && python ./server.py"
+
+  assembler:
+    <<: *server-common
+    environment:
+      MNE_USE_NUMBA: 'false'
+    command: bash -c "cd ./scripts && python ./assembler.py && sleep 10"
+    restart: always    
