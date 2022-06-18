@@ -8,6 +8,7 @@ import pandas as pd
 import sqlite3
 import cv2
 from tqdm import tqdm
+from time import sleep
 
 from libs import indicators
 
@@ -111,6 +112,12 @@ def restore_events(client_id):
     """, conn)
     events_df.to_csv(f'{data_dir}/{client_id}/{client_id}-events.csv')
 
+def check_file_absence(dir_path):
+    print(f"Checking files in {dir_path}")
+    number_of_files = len(os.listdir(dir_path))
+    sleep(10)
+    new_number_of_files = len(os.listdir(dir_path))
+    return number_of_files == new_number_of_files
 
 if __name__ == '__main__':
     devices = json.load(open('../devices.json'))
@@ -132,6 +139,8 @@ if __name__ == '__main__':
         if os.path.exists(dir_path + '/compiled'):
             continue
         if 'mock-session' in client_id:
+            continue
+        if not check_file_absence(dir_path + '/jsonFrame'): 
             continue
 
         json_frames = []
