@@ -131,6 +131,8 @@ if __name__ == '__main__':
 
         if os.path.exists(dir_path + '/compiled'):
             continue
+        if 'mock-session' in client_id:
+            continue
 
         json_frames = []
 
