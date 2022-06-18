@@ -17,7 +17,7 @@ services:
     build: 
       context: ./simple-interface
     environment:
-      HOST: "localhost"
+      HOST: "${HOST}"
     #   POSTGRES_USER: airflow
     #   POSTGRES_PASSWORD: airflow
     #   POSTGRES_DB: airflow
@@ -26,6 +26,12 @@ services:
       - ./simple-interface/frontend:/opt/emotions-dashboard/frontend
       - ./sessions:/opt/emotions-dashboard/sessions
     stdin_open: true
+
+  mqtt-broker:
+    network_mode: host
+    image: eclipse-mosquitto
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
 
   mqtt-server:
     <<: *server-common
