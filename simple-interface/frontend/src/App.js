@@ -169,7 +169,7 @@ class App extends StreamlitComponentBase {
       x: time,
       y: flowSignal,
       type: 'scatter',
-      name: 'Flow'
+      name: 'Relaxation'
     };
 
     var trace2 = {
@@ -187,7 +187,7 @@ class App extends StreamlitComponentBase {
       xaxis: 'x',
       yaxis: 'y3',
       type: 'scatter',
-      name: 'Boredom'
+      name: 'Exploration'
     };
 
     var verticalLines = Array.from(
