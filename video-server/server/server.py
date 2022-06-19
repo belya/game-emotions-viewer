@@ -100,6 +100,7 @@ def on_event_message(client_id, message_json):
     print(f"Receiving EVENT message from {client_id}")
     events_database = f'{data_dir}/{client_id}/events.db'
     conn = sqlite3.connect(events_database)
+    cursor = conn.cursor()
 
     cursor.execute("""
         INSERT INTO events (game_time, type)

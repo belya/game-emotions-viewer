@@ -36,6 +36,9 @@ services:
   mqtt-server:
     <<: *server-common
     command: bash -c "cd ./server && python ./server.py"
+    restart: always
+    depends_on:
+      - mqtt-broker
 
   assembler:
     <<: *server-common
@@ -43,3 +46,9 @@ services:
       MNE_USE_NUMBA: 'false'
     command: bash -c "cd ./scripts && python ./assembler.py && sleep 10"
     restart: always    
+
+  static-server:
+    network_mode: host
+    image: halverneus/static-file-server:latest
+    volumes:
+      - ./sessions:/web 

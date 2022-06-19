@@ -62,15 +62,12 @@ st.sidebar.markdown("""
 
 events_json = events_df.to_dict(orient='records') #+\
 
-# TODO add static server to serve session files
-os.system(f'cp {session_path}/{session_id}_screenVideoFrame.mp4 ../frontend/public/mock-session_screenVideoFrame.mp4')
-os.system(f'cp {session_path}/{session_id}_webCamFrame.mp4 ../frontend/public/mock-session_webCamFrame.mp4')
-
+host = os.environ['HOST']
 
 game_viewer_component(
     video={
-        'screen': './mock-session_screenVideoFrame.mp4',
-        'webcam': './mock-session_webCamFrame.mp4'
+        'screen': f'http://{host}:8080/{session_id}/{session_id}_screenVideoFrame.mp4',
+        'webcam': f'http://{host}:8080/{session_id}/{session_id}_webCamFrame.mp4'
     },
     signal={
         'time': time.tolist(),
