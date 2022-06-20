@@ -7,9 +7,20 @@ import json
 
 import os
 
+st.set_page_config(
+    page_title='Game Emotions Viewer', 
+    page_icon=":eyeglasses:",
+    layout='wide'
+)
+
 query_params = st.experimental_get_query_params()
-session_id = query_params.get('session_id', ['mock-session'])[0]
+session_id_param = query_params.get('session_id', ['mock-session'])[0]
+
+all_sessions = sorted([d for d in os.listdir('/opt/emotions-dashboard/sessions') if os.path.isdir('/opt/emotions-dashboard/sessions/' + d)])
+session_id = st.sidebar.selectbox('Session', all_sessions, index=all_sessions.index(session_id_param))
 session_path = f'/opt/emotions-dashboard/sessions/{session_id}'
+
+st.experimental_set_query_params(**{'session_id': session_id})
 
 host = os.environ.get('HOST', 'localhost')
 
@@ -22,12 +33,6 @@ def process_events(events_df, lane_id, ends=False):
     events_df['tooltip'] = events_df['type']
 
     return events_df
-
-st.set_page_config(
-    page_title='Game Emotions Viewer', 
-    page_icon=":eyeglasses:",
-    layout='wide'
-)
 
 game_viewer_component = components.declare_component(
     "game_viewer",
